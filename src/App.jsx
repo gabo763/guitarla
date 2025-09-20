@@ -10,10 +10,28 @@ function App() {
     const [data, setData] = useState(db)
     const [cart, setCart] = useState([])
 
+    function addToCar (item) {
+        const itemExists = cart.findIndex((guitar) => guitar.id === item.id);
+
+        if(itemExists >= 0) {
+            const newCart = [...cart];
+            newCart[itemExists].quantity ++;
+            setCart(newCart);
+
+        }
+        else{
+            item.quantity = 1;
+            setCart([...cart, item])
+        }
+        setCart(prevCart => [...prevCart, item])
+    }
+
 
   return (
     <>
-    <Header />
+    <Header 
+    cart={cart}
+    />
 
     <main className="container-xl mt-5">
         <h2 className="text-center">Nuestra Colección</h2>
@@ -24,6 +42,7 @@ function App() {
                 key={guitar.id} 
                 guitar={guitar}
                 cart={cart} 
+                addToCar={addToCar}
                 setCart={setCart}/>
             ))}
         </div>
