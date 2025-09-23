@@ -1,4 +1,4 @@
-import { useState, useEfect } from "react"
+import { useState, useEffect } from "react"
 import Header from "./components/Header"
 import Guitar from "./components/Guitar"
 import { db } from "./data/db";
@@ -6,14 +6,26 @@ import { db } from "./data/db";
 
 function App() {
 
+    const initialCart = () => {
+        const storedCart = localStorage.getItem('cart');
+        return storedCart ? JSON.parse(storedCart) : []
+    }
     //state
-    const [data, setData] = useState(db)
-    const [cart, setCart] = useState([])
+    const [data] = useState(db)
+    const [cart, setCart] = useState(initialCart);
+
+    const maxQuantity = 5;
+    const minQuantity = 1;
+
+    useEffect(() => {
+        localStorage.setItem('cart', JSON.stringify(cart))
+    }, [cart])
+
 
     function addToCar (item) {
         const itemExists = cart.findIndex((guitar) => guitar.id === item.id);
-
         if(itemExists >= 0) {
+            if(cart[itemExists].quantity >= maxQuantity) return; // Evitar que la cantidad supere el máximo
             const newCart = [...cart];
             newCart[itemExists].quantity ++;
             setCart(newCart);
@@ -21,16 +33,47 @@ function App() {
         }
         else{
             item.quantity = 1;
-            setCart([...cart, item])
+            setCart([...cart, item])    
         }
-        setCart(prevCart => [...prevCart, item])
     }
 
+    function removeFromCar (id) {
+        setCart(prevCart => prevCart.filter(guitar => guitar.id !== id));
+    }
 
+    function increaseQuantity (id) {
+        const updatedCart = cart.map(item => {
+            if (item.id === id && item.quantity < maxQuantity) {
+                return { ...item, quantity: item.quantity + 1 };
+            }
+            return item;
+        });
+        setCart(updatedCart); 
+    }
+
+    function decreaseQuantity (id) {
+        const updatedCart = cart.map(item => {
+            if (item.id === id && item.quantity > minQuantity) {
+                return { ...item, quantity: item.quantity - 1 };
+            }
+            return item;
+        });
+        setCart(updatedCart); 
+    }
+
+    function clearCart() {
+        setCart([]);
+    }
+
+    
   return (
     <>
     <Header 
     cart={cart}
+    removeFromCar={removeFromCar}
+    increaseQuantity={increaseQuantity}
+    decreaseQuantity={decreaseQuantity}
+    clearCart={clearCart}   
     />
 
     <main className="container-xl mt-5">
